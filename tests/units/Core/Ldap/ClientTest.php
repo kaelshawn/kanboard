@@ -26,7 +26,6 @@ function ldap_start_tls($link_identifier)
 class ClientTest extends \Base
 {
     public static $functions;
-    private $ldap;
 
     public function setUp()
     {
