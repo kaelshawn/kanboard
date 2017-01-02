@@ -2,6 +2,7 @@ Kanboard.Task = function(app) {
     this.app = app;
 };
 
+// TODO: rewrite this code
 Kanboard.Task.prototype.onPopoverOpened = function() {
     var self = this;
     var reloadingProjectId = 0;
@@ -20,6 +21,7 @@ Kanboard.Task.prototype.onPopoverOpened = function() {
         }
     });
 
+    // TODO: rewrite this code
     // Reload page when a destination project is changed
     $(document).on("change", "select.task-reload-project-destination", function() {
         if (reloadingProjectId > 0) {

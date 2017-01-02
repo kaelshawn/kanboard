@@ -5,11 +5,11 @@
 <?php if (empty($projects_list)): ?>
     <p class="alert"><?= t('There is no destination project available.') ?></p>
     <div class="form-actions">
-        <?= $this->url->link(t('cancel'), 'TaskViewController', 'show', array('task_id' => $task['id'], 'project_id' => $task['project_id']), false, 'close-popover btn') ?>
+        <?= $this->url->link(t('cancel'), 'TaskViewController', 'show', array('task_id' => $task['id'], 'project_id' => $task['project_id']), false, 'js-modal-close btn') ?>
     </div>
 <?php else: ?>
 
-    <form class="popover-form" method="post" action="<?= $this->url->href('TaskDuplicationController', 'copy', array('task_id' => $task['id'], 'project_id' => $task['project_id'])) ?>" autocomplete="off">
+    <form method="post" action="<?= $this->url->href('TaskDuplicationController', 'copy', array('task_id' => $task['id'], 'project_id' => $task['project_id'])) ?>" autocomplete="off">
 
         <?= $this->form->csrf() ?>
         <?= $this->form->hidden('id', $values) ?>
@@ -41,10 +41,6 @@
         <?= $this->form->select('owner_id', $users_list, $values) ?>
         <p class="form-help"><?= t('Current assignee: %s', ($task['assignee_name'] ?: $task['assignee_username']) ?: e('not assigned')) ?></p>
 
-        <div class="form-actions">
-            <button type="submit" class="btn btn-blue"><?= t('Save') ?></button>
-            <?= t('or') ?>
-            <?= $this->url->link(t('cancel'), 'TaskViewController', 'show', array('task_id' => $task['id'], 'project_id' => $task['project_id']), false, 'close-popover') ?>
-        </div>
+        <?= $this->modal->submitButtons() ?>
     </form>
 <?php endif ?>
