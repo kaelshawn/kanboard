@@ -30,12 +30,13 @@ class TaskExport extends Base
     public function export($project_id, $from, $to)
     {
         $tasks = $this->getTasks($project_id, $from, $to);
+        $taskIds = array_column($tasks, 'id');
+        $tags = $this->taskTagModel->getTagsByTaskIds($taskIds);
         $colors = $this->colorModel->getList();
-        $defaultSwimlane = $this->swimlaneModel->getDefault($project_id);
         $results = array($this->getColumns());
 
         foreach ($tasks as &$task) {
-            $task = $this->format($task, $defaultSwimlane['default_swimlane'], $colors);
+            $task = $this->format($task, $colors, $tags);
             $results[] = array_values($task);
         }
 
@@ -84,7 +85,8 @@ class TaskExport extends Base
                 TaskModel::TABLE . '.date_completed',
                 TaskModel::TABLE . '.date_started',
                 TaskModel::TABLE . '.time_estimated',
-                TaskModel::TABLE . '.time_spent'
+                TaskModel::TABLE . '.time_spent',
+                TaskModel::TABLE . '.priority'
             )
             ->join(UserModel::TABLE, 'id', 'owner_id', TaskModel::TABLE)
             ->left(UserModel::TABLE, 'uc', 'id', TaskModel::TABLE, 'creator_id')
@@ -104,22 +106,27 @@ class TaskExport extends Base
      *
      * @access protected
      * @param  array  $task
-     * @param  string $defaultSwimlaneName
-     * @param  array   $colors
+     * @param  array  $colors
+     * @param  array  $tags
      * @return array
      */
-    protected function format(array &$task, $defaultSwimlaneName, array $colors)
+    protected function format(array &$task, array $colors, array &$tags)
     {
         $task['is_active'] = $task['is_active'] == TaskModel::STATUS_OPEN ? e('Open') : e('Closed');
         $task['color_id'] = $colors[$task['color_id']];
         $task['score'] = $task['score'] ?: 0;
-        $task['swimlane_name'] = $task['swimlane_name'] ?: $defaultSwimlaneName;
+        $task['tags'] = '';
 
         $task = $this->dateParser->format(
             $task,
             array('date_due', 'date_modification', 'date_creation', 'date_started', 'date_completed'),
             $this->dateParser->getUserDateTimeFormat()
         );
+
+        if (isset($tags[$task['id']])) {
+            $taskTags = array_column($tags[$task['id']], 'name');
+            $task['tags'] = implode(', ', $taskTags);
+        }
 
         return $task;
     }
@@ -155,6 +162,8 @@ class TaskExport extends Base
             e('Start date'),
             e('Time estimated'),
             e('Time spent'),
+            e('Priority'),
+            e('Tags'),
         );
     }
 }

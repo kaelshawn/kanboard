@@ -9,6 +9,13 @@ use Kanboard\Model\UserModel;
 
 class TextHelperTest extends Base
 {
+    public function testImplode()
+    {
+        $textHelper = new TextHelper($this->container);
+        $html = '&lt;img src=x onerror=alert(0)&gt;';
+        $this->assertEquals($html, $textHelper->implode(', ', array('<img src=x onerror=alert(0)>')));
+    }
+
     public function testMarkdownTaskLink()
     {
         $textHelper = new TextHelper($this->container);
@@ -41,6 +48,13 @@ class TextHelperTest extends Base
             '<p>Check that: <a href="http://stackoverflow.com/questions/1732348/regex-match-open-tags-except-xhtml-self-contained-tags/1732454#1732454">http://stackoverflow.com/questions/1732348/regex-match-open-tags-except-xhtml-self-contained-tags/1732454#1732454</a></p>',
             $textHelper->markdown(
                 'Check that: http://stackoverflow.com/questions/1732348/regex-match-open-tags-except-xhtml-self-contained-tags/1732454#1732454'
+            )
+        );
+
+        $this->assertEquals(
+            '<p><a href="http://localhost">item #123 is here</a></p>',
+            $textHelper->markdown(
+                '[item #123 is here](http://localhost)'
             )
         );
     }
@@ -93,20 +107,20 @@ class TextHelperTest extends Base
         );
 
         $this->assertEquals('<p>Text @admin @notfound</p>', $textHelper->markdown('Text @admin @notfound', true));
-    }
 
-    public function testMarkdownAttribute()
-    {
-        $textHelper = new TextHelper($this->container);
-        $this->assertEquals('&lt;p&gt;&Ccedil;a marche&lt;/p&gt;', $textHelper->markdownAttribute('Ça marche'));
-        $this->assertEquals('&lt;p&gt;Test with &amp;quot;double quotes&amp;quot;&lt;/p&gt;', $textHelper->markdownAttribute('Test with "double quotes"'));
-        $this->assertEquals('&lt;p&gt;Test with &#039;single quotes&#039;&lt;/p&gt;', $textHelper->markdownAttribute("Test with 'single quotes'"));
+        $this->assertEquals(
+            '<p><a href="http://localhost">mention @admin at localhost</a></p>',
+            $textHelper->markdown(
+                '[mention @admin at localhost](http://localhost)'
+            )
+        );
     }
 
     public function testFormatBytes()
     {
         $textHelper = new TextHelper($this->container);
 
+        $this->assertEquals('0', $textHelper->bytes(0));
         $this->assertEquals('1k', $textHelper->bytes(1024));
         $this->assertEquals('33.71k', $textHelper->bytes(34520));
     }

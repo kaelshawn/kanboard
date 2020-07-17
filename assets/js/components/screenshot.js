@@ -15,7 +15,6 @@ KB.component('screenshot', function (containerElement) {
                 for (var i = 0; i < items.length; i++) {
                     // Find an image in pasted elements
                     if (items[i].type.indexOf("image") !== -1) {
-
                         var blob = items[i].getAsFile();
 
                         // Get the image as base64 data
@@ -60,10 +59,8 @@ KB.component('screenshot', function (containerElement) {
     }
 
     function destroy() {
-        if (pasteCatcher !== null) {
-            document.body.removeChild(pasteCatcher);
-        } else if (document.getElementById('screenshot-pastezone')) {
-            document.body.removeChild(document.getElementById('screenshot-pastezone'));
+        if (KB.exists('#screenshot-pastezone')) {
+            KB.find('#screenshot-pastezone').remove();
         }
 
         document.removeEventListener('click', setFocus);
@@ -108,6 +105,10 @@ KB.component('screenshot', function (containerElement) {
         destroy();
         initialize();
     }
+
+    KB.on('modal.close', function () {
+        destroy();
+    });
 
     this.render = function () {
         inputElement = KB.dom('input')

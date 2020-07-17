@@ -1,3 +1,5 @@
+<html>
+<body>
 <h2><?= $this->text->e($task['title']) ?> (#<?= $task['id'] ?>)</h2>
 
 <ul>
@@ -17,4 +19,6 @@
     <?= $this->text->markdown($task['description'], true) ?: t('There is no description.') ?>
 <?php endif ?>
 
-<?= $this->render('notification/footer', array('task' => $task, 'application_url' => $application_url)) ?>
+<?= $this->render('notification/footer', array('task' => $task)) ?>
+</body>
+</html>

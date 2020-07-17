@@ -2,7 +2,7 @@ KB.component('file-upload', function (containerElement, options) {
     var inputFileElement = null;
     var dropzoneElement = null;
     var files = [];
-    var currentFileIndex = null;
+    var currentFileIndex = 0;
 
     function onProgress(e) {
         if (e.lengthComputable) {
@@ -19,11 +19,17 @@ KB.component('file-upload', function (containerElement, options) {
         KB.find('#file-item-' + currentFileIndex).add(errorElement);
     }
 
+    function onServerError(response) {
+        var errorElement = KB.dom('div').addClass('file-error').text(response.message).build();
+        KB.find('#file-item-' + currentFileIndex).add(errorElement);
+        KB.trigger('modal.stop');
+    }
+
     function onComplete() {
         currentFileIndex++;
 
         if (currentFileIndex < files.length) {
-            KB.http.uploadFile(options.url, files[currentFileIndex], onProgress, onComplete, onError);
+            KB.http.uploadFile(options.url, files[currentFileIndex], options.csrf, onProgress, onComplete, onError, onServerError);
         } else {
             KB.trigger('modal.stop');
             KB.trigger('modal.hide');
@@ -56,7 +62,9 @@ KB.component('file-upload', function (containerElement, options) {
     }
 
     function onFileChange() {
-        files = inputFileElement.files;
+        for (var i = 0; i < inputFileElement.files.length; i++) {
+            files.push(inputFileElement.files[i]);
+        }
         showFiles();
     }
 
@@ -75,13 +83,16 @@ KB.component('file-upload', function (containerElement, options) {
         e.stopPropagation();
         e.preventDefault();
 
-        files = e.dataTransfer.files;
+        for (var i = 0; i < e.dataTransfer.files.length; i++) {
+            files.push(e.dataTransfer.files[i]);
+        }
+
         showFiles();
     }
 
     function uploadFiles() {
         if (files.length > 0) {
-            KB.http.uploadFile(options.url, files[currentFileIndex], onProgress, onComplete, onError);
+            KB.http.uploadFile(options.url, files[currentFileIndex], options.csrf, onProgress, onComplete, onError, onServerError);
         }
     }
 
@@ -151,8 +162,19 @@ KB.component('file-upload', function (containerElement, options) {
             .text('(0%)')
             .build();
 
+        var deleteElement = KB.dom('span')
+            .attr('id', 'file-delete-' + index)
+            .html('<a href="#"><i class="fa fa-trash fa-fw"></i></a>')
+            .on('click', function () {
+                files.splice(index, 1);
+                KB.find('#file-item-' + index).remove();
+                showFiles();
+            })
+            .build();
+
         var itemElement = KB.dom('li')
             .attr('id', 'file-item-' + index)
+            .add(deleteElement)
             .add(progressElement)
             .text(' ' + files[index].name + ' ')
             .add(percentageElement);
@@ -183,6 +205,9 @@ KB.component('file-upload', function (containerElement, options) {
 
     this.render = function () {
         KB.on('modal.submit', onSubmit);
+        KB.on('modal.close', function () {
+           KB.removeListener('modal.submit', onSubmit);
+        });
 
         inputFileElement = buildFileInputElement();
         dropzoneElement = buildDropzoneElement();

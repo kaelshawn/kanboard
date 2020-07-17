@@ -19,14 +19,31 @@ interface ExternalTaskProviderInterface
     public function getName();
 
     /**
+     * Get provider icon
+     *
+     * @access public
+     * @return string
+     */
+    public function getIcon();
+
+    /**
+     * Get label for adding a new task
+     *
+     * @access public
+     * @return string
+     */
+    public function getMenuAddLabel();
+
+    /**
      * Retrieve task from external system or cache
      *
      * @access public
      * @throws \Kanboard\Core\ExternalTask\ExternalTaskException
      * @param  string $uri
+     * @param  int    $projectID
      * @return ExternalTaskInterface
      */
-    public function fetch($uri);
+    public function fetch($uri, $projectID);
 
     /**
      * Save external task to another system

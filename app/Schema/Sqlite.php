@@ -2,11 +2,135 @@
 
 namespace Schema;
 
+require_once __DIR__.'/Migration.php';
+
 use Kanboard\Core\Security\Token;
 use Kanboard\Core\Security\Role;
 use PDO;
 
-const VERSION = 108;
+const VERSION = 124;
+
+function version_124(PDO $pdo)
+{
+    $pdo->exec('ALTER TABLE projects ADD COLUMN enable_global_tags INTEGER DEFAULT 1 NOT NULL');
+}
+
+function version_123(PDO $pdo)
+{
+    $pdo->exec('ALTER TABLE swimlanes ADD COLUMN task_limit INTEGER DEFAULT 0');
+}
+
+function version_122(PDO $pdo)
+{
+    $pdo->exec('ALTER TABLE projects ADD COLUMN task_limit INTEGER DEFAULT 0');
+}
+
+function version_121(PDO $pdo)
+{
+    $pdo->exec('ALTER TABLE projects ADD COLUMN per_swimlane_task_limits INTEGER DEFAULT 0 NOT NULL');
+}
+
+function version_120(PDO $pdo)
+{
+    $pdo->exec('ALTER TABLE tags ADD COLUMN color_id TEXT DEFAULT NULL');
+}
+
+function version_119(PDO $pdo)
+{
+    $pdo->exec('ALTER TABLE project_has_categories ADD COLUMN color_id TEXT DEFAULT NULL');
+}
+
+function version_118(PDO $pdo)
+{
+    $pdo->exec('ALTER TABLE users ADD COLUMN filter TEXT');
+}
+
+function version_117(PDO $pdo)
+{
+    $pdo->exec("CREATE TABLE sessions (
+        id TEXT PRIMARY KEY,
+        expire_at INTEGER NOT NULL,
+        data TEXT DEFAULT ''
+    )");
+}
+
+function version_116(PDO $pdo)
+{
+    $pdo->exec('CREATE TABLE predefined_task_descriptions (
+        id INTEGER PRIMARY KEY,
+        project_id INTEGER NOT NULL,
+        title TEXT NOT NULL,
+        description TEXT NOT NULL,
+        FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE
+    )');
+}
+
+function version_115(PDO $pdo)
+{
+    $pdo->exec('ALTER TABLE projects ADD COLUMN predefined_email_subjects TEXT');
+}
+
+function version_114(PDO $pdo)
+{
+    $pdo->exec('ALTER TABLE column_has_move_restrictions ADD COLUMN only_assigned INTEGER DEFAULT 0');
+}
+
+function version_113(PDO $pdo)
+{
+    $pdo->exec(
+        'ALTER TABLE project_activities RENAME TO project_activities_bak'
+    );
+    $pdo->exec("
+      CREATE TABLE project_activities (
+          id INTEGER PRIMARY KEY,
+          date_creation INTEGER NOT NULL,
+          event_name TEXT NOT NULL,
+          creator_id INTEGER NOT NULL,
+          project_id INTEGER NOT NULL,
+          task_id INTEGER NOT NULL,
+          data TEXT,
+          FOREIGN KEY(creator_id) REFERENCES users(id) ON DELETE CASCADE,
+          FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE,
+          FOREIGN KEY(task_id) REFERENCES tasks(id) ON DELETE CASCADE
+      )
+    ");
+    $pdo->exec(
+        'INSERT INTO project_activities SELECT * FROM project_activities_bak'
+    );
+    $pdo->exec(
+        'DROP TABLE project_activities_bak'
+    );
+}
+
+function version_112(PDO $pdo)
+{
+    migrate_default_swimlane($pdo);
+}
+
+function version_111(PDO $pdo)
+{
+    $pdo->exec('ALTER TABLE "projects" ADD COLUMN email TEXT');
+}
+
+function version_110(PDO $pdo)
+{
+    $pdo->exec("
+        CREATE TABLE invites (
+            email TEXT NOT NULL,
+            project_id INTEGER NOT NULL,
+            token TEXT NOT NULL,
+            PRIMARY KEY(email, token)
+        )
+    ");
+
+    $pdo->exec("DELETE FROM settings WHERE \"option\"='application_datetime_format'");
+}
+
+function version_109(PDO $pdo)
+{
+    $pdo->exec('ALTER TABLE comments ADD COLUMN date_modification INTEGER');
+    $pdo->exec('UPDATE comments SET date_modification = date_creation WHERE date_modification IS NULL;');
+}
 
 function version_108(PDO $pdo)
 {
@@ -220,7 +344,7 @@ function version_92(PDO $pdo)
             $row['action_name'] = '\Kanboard\Action\TaskCloseColumn';
         } elseif ($row['action_name'] === 'TaskLogMoveAnotherColumn') {
             $row['action_name'] = '\Kanboard\Action\CommentCreationMoveTaskColumn';
-        } elseif ($row['action_name']{0} !== '\\') {
+        } elseif ($row['action_name'][0] !== '\\') {
             $row['action_name'] = '\Kanboard\Action\\'.$row['action_name'];
         }
 
@@ -919,7 +1043,7 @@ function version_33(PDO $pdo)
             id INTEGER PRIMARY KEY,
             date_creation INTEGER NOT NULL,
             event_name TEXT NOT NULL,
-            creator_id INTEGE NOT NULL,
+            creator_id INTEGER NOT NULL,
             project_id INTEGER NOT NULL,
             task_id INTEGER NOT NULL,
             data TEXT,

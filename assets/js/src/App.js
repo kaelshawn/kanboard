@@ -48,7 +48,7 @@ Kanboard.App.prototype.datePicker = function() {
     var bodyElement = $("body");
     var dateFormat = bodyElement.data("js-date-format");
     var timeFormat = bodyElement.data("js-time-format");
-    var lang = bodyElement.data("js-lang");
+    var lang = $("html").attr("lang");
 
     $.datepicker.setDefaults($.datepicker.regional[lang]);
     $.timepicker.setDefaults($.timepicker.regional[lang]);
@@ -65,7 +65,9 @@ Kanboard.App.prototype.datePicker = function() {
     $(".form-datetime").datetimepicker({
         dateFormat: dateFormat,
         timeFormat: timeFormat,
-        constrainInput: false
+        constrainInput: false,
+        amNames: ['am', 'AM'],
+        pmNames: ['pm', 'PM']
     });
 };
 
@@ -79,7 +81,7 @@ Kanboard.App.prototype.autoComplete = function() {
     $(".autocomplete").each(function() {
         var input = $(this);
         var field = input.data("dst-field");
-        var extraField = input.data("dst-extra-field");
+        var extraFields = input.data("dst-extra-fields");
 
         if ($('#form-' + field).val() === '') {
             input.parent().find("button[type=submit]").attr('disabled','disabled');
@@ -91,8 +93,13 @@ Kanboard.App.prototype.autoComplete = function() {
             select: function(event, ui) {
                 $("input[name=" + field + "]").val(ui.item.id);
 
-                if (extraField) {
-                    $("input[name=" + extraField + "]").val(ui.item[extraField]);
+                if (extraFields) {
+                    var fields = extraFields.split(',');
+
+                    for (var i = 0; i < fields.length; i++) {
+                        var fieldName = fields[i].trim();
+                        $("input[name=" + fieldName + "]").val(ui.item[fieldName]);
+                    }
                 }
 
                 input.parent().find("button[type=submit]").removeAttr('disabled');
@@ -111,24 +118,4 @@ Kanboard.App.prototype.showLoadingIcon = function() {
 
 Kanboard.App.prototype.hideLoadingIcon = function() {
     $("#app-loading-icon").remove();
-};
-
-Kanboard.App.prototype.isVisible = function() {
-    var property = "";
-
-    if (typeof document.hidden !== "undefined") {
-        property = "visibilityState";
-    } else if (typeof document.mozHidden !== "undefined") {
-        property = "mozVisibilityState";
-    } else if (typeof document.msHidden !== "undefined") {
-        property = "msVisibilityState";
-    } else if (typeof document.webkitHidden !== "undefined") {
-        property = "webkitVisibilityState";
-    }
-
-    if (property !== "") {
-        return document[property] == "visible";
-    }
-
-    return true;
 };

@@ -161,7 +161,7 @@ KB.component('select-dropdown-autocomplete', function(containerElement, options)
         var hasActiveItem = false;
 
         for (var i = 0; i < items.length; i++) {
-            if (text.length === 0 || items[i]['data-label'].toLowerCase().indexOf(text.toLowerCase()) === 0) {
+            if (text.length === 0 || items[i]['data-label'].toLowerCase().indexOf(text.toLowerCase()) > -1) {
                 var item = items[i];
 
                 if (typeof options.defaultValue !== 'undefined' && String(options.defaultValue) === item['data-value']) {
@@ -183,6 +183,7 @@ KB.component('select-dropdown-autocomplete', function(containerElement, options)
     function buildDropdownMenu() {
         var itemElements = filterItems(inputElement.value, buildItems(options.items));
         var componentPosition = componentElement.getBoundingClientRect();
+        var windowPosition = document.body.scrollTop || document.documentElement.scrollTop;
 
         if (itemElements.length === 0) {
             return null;
@@ -190,7 +191,7 @@ KB.component('select-dropdown-autocomplete', function(containerElement, options)
 
         return KB.dom('ul')
             .attr('id', 'select-dropdown-menu')
-            .style('top', (document.body.scrollTop + componentPosition.bottom) + 'px')
+            .style('top', (windowPosition + componentPosition.bottom) + 'px')
             .style('left', componentPosition.left + 'px')
             .style('width', componentPosition.width + 'px')
             .style('maxHeight', (window.innerHeight - componentPosition.bottom - 20) + 'px')
@@ -238,6 +239,11 @@ KB.component('select-dropdown-autocomplete', function(containerElement, options)
         KB.on('select.dropdown.loading.start', onLoadingStart);
         KB.on('select.dropdown.loading.stop', onLoadingStop);
 
+        KB.on('modal.close', function () {
+            KB.removeListener('select.dropdown.loading.start', onLoadingStart);
+            KB.removeListener('select.dropdown.loading.stop', onLoadingStop);
+        });
+
         chevronIconElement = KB.dom('i')
             .attr('class', 'fa fa-chevron-down select-dropdown-chevron')
             .click(toggleDropdownMenu)
@@ -259,7 +265,6 @@ KB.component('select-dropdown-autocomplete', function(containerElement, options)
             .attr('type', 'text')
             .attr('placeholder', getPlaceholderValue())
             .addClass('select-dropdown-input')
-            .style('width', (containerElement.offsetWidth - 30) + 'px')
             .on('focus', toggleDropdownMenu)
             .on('input', onInputChanged, true)
             .build();

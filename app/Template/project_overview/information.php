@@ -1,7 +1,5 @@
-<section class="accordion-section">
-    <div class="accordion-title">
-        <h3><a href="#" class="fa accordion-toggle"></a> <?= t('Information') ?></h3>
-    </div>
+<details class="accordion-section" open>
+    <summary class="accordion-title"><?= t('Information') ?></summary>
     <div class="accordion-content">
         <div class="panel">
             <ul>
@@ -13,8 +11,8 @@
                     <?php foreach ($roles as $role => $role_name): ?>
                         <?php if (isset($users[$role])): ?>
                             <li>
-                                <?= $role_name ?>:
-                                <strong><?= implode(', ', $users[$role]) ?></strong>
+                                <?= $this->text->e($role_name) ?>:
+                                <strong><?= $this->text->implode(', ', $users[$role]) ?></strong>
                             </li>
                         <?php endif ?>
                     <?php endforeach ?>
@@ -36,4 +34,4 @@
             </ul>
         </div>
     </div>
-</section>
+</details>

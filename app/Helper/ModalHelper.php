@@ -47,10 +47,10 @@ class ModalHelper extends Base
         return $this->helper->url->link($html, $controller, $action, $params, false, 'js-modal-large');
     }
 
-    public function medium($icon, $label, $controller, $action, array $params = array())
+    public function medium($icon, $label, $controller, $action, array $params = array(), $title = '')
     {
         $html = '<i class="fa fa-'.$icon.' fa-fw js-modal-medium" aria-hidden="true"></i>'.$label;
-        return $this->helper->url->link($html, $controller, $action, $params, false, 'js-modal-medium');
+        return $this->helper->url->link($html, $controller, $action, $params, false, 'js-modal-medium', $title);
     }
 
     public function small($icon, $label, $controller, $action, array $params = array())
@@ -63,6 +63,12 @@ class ModalHelper extends Base
     {
         $html = '<i class="fa fa-'.$icon.' fa-fw js-modal-medium" aria-hidden="true"></i>'.$label;
         return $this->helper->url->link($html, $controller, $action, $params, false, 'js-modal-medium btn');
+    }
+
+    public function mediumIcon($icon, $label, $controller, $action, array $params = array())
+    {
+        $html = '<i class="fa fa-'.$icon.' fa-fw js-modal-medium" aria-hidden="true"></i>';
+        return $this->helper->url->link($html, $controller, $action, $params, false, 'js-modal-medium', $label);
     }
 
     public function confirm($icon, $label, $controller, $action, array $params = array())
@@ -79,5 +85,11 @@ class ModalHelper extends Base
     public function replaceLink($label, $controller, $action, array $params = array())
     {
         return $this->helper->url->link($label, $controller, $action, $params, false, 'js-modal-replace');
+    }
+
+    public function replaceIconLink($icon, $label, $controller, $action, array $params = array())
+    {
+        $html = '<i class="fa fa-'.$icon.' fa-fw js-modal-replace" aria-hidden="true"></i>'.$label;
+        return $this->helper->url->link($html, $controller, $action, $params, false, 'js-modal-replace');
     }
 }

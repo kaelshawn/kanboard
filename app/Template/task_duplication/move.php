@@ -22,13 +22,13 @@
             'placeholder'  => t('Choose a project'),
             'replace'      => array(
                 'regex' => 'PROJECT_ID',
-                'url' => $this->url->href('TaskDuplicationController', 'copy', array('task_id' => $task['id'], 'project_id' => $task['project_id'], 'dst_project_id' => 'PROJECT_ID')),
+                'url' => $this->url->href('TaskDuplicationController', 'move', array('task_id' => $task['id'], 'project_id' => $task['project_id'], 'dst_project_id' => 'PROJECT_ID')),
             )
         )) ?>
 
         <?= $this->form->label(t('Swimlane'), 'swimlane_id') ?>
         <?= $this->form->select('swimlane_id', $swimlanes_list, $values) ?>
-        <p class="form-help"><?= t('Current swimlane: %s', $task['swimlane_name'] ?: e($task['default_swimlane'])) ?></p>
+        <p class="form-help"><?= t('Current swimlane: %s', $task['swimlane_name']) ?></p>
 
         <?= $this->form->label(t('Column'), 'column_id') ?>
         <?= $this->form->select('column_id', $columns_list, $values) ?>

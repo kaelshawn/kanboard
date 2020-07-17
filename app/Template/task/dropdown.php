@@ -1,14 +1,21 @@
 <div class="dropdown">
-    <a href="#" class="dropdown-menu">#<?= $task['id'] ?> <i class="fa fa-caret-down"></i></a>
+    <a href="#" class="dropdown-menu dropdown-menu-link-icon"><strong>#<?= $task['id'] ?> <i class="fa fa-caret-down"></i></strong></a>
     <ul>
-        <?php if (array_key_exists('date_started', $task) && empty($task['date_started'])): ?>
-        <li>
-            <?= $this->url->icon('play', t('Set automatically the start date'), 'TaskModificationController', 'start', array('task_id' => $task['id'], 'project_id' => $task['project_id'])) ?>
-        </li>
+        <?php if ($this->projectRole->canUpdateTask($task)): ?>
+            <?php if ($this->projectRole->canChangeAssignee($task) && array_key_exists('owner_id', $task) && $task['owner_id'] != $this->user->getId()): ?>
+            <li>
+                <?= $this->url->icon('hand-o-right', t('Assign to me'), 'TaskModificationController', 'assignToMe', ['task_id' => $task['id'], 'project_id' => $task['project_id'], 'redirect' => isset($redirect) ? $redirect : '']) ?>
+            </li>
+            <?php endif ?>
+            <?php if (array_key_exists('date_started', $task) && empty($task['date_started'])): ?>
+            <li>
+                <?= $this->url->icon('play', t('Set the start date automatically'), 'TaskModificationController', 'start', ['task_id' => $task['id'], 'project_id' => $task['project_id'], 'redirect' => isset($redirect) ? $redirect : '']) ?>
+            </li>
+            <?php endif ?>
+            <li>
+                <?= $this->modal->large('edit', t('Edit the task'), 'TaskModificationController', 'edit', array('task_id' => $task['id'], 'project_id' => $task['project_id'])) ?>
+            </li>
         <?php endif ?>
-        <li>
-            <?= $this->modal->large('edit', t('Edit the task'), 'TaskModificationController', 'edit', array('task_id' => $task['id'], 'project_id' => $task['project_id'])) ?>
-        </li>
         <li>
             <?= $this->modal->medium('plus', t('Add a sub-task'), 'SubtaskController', 'create', array('task_id' => $task['id'], 'project_id' => $task['project_id'])) ?>
         </li>
@@ -22,6 +29,9 @@
             <?= $this->modal->small('comment-o', t('Add a comment'), 'CommentController', 'create', array('task_id' => $task['id'], 'project_id' => $task['project_id'])) ?>
         </li>
         <li>
+            <?= $this->modal->medium('file', t('Attach a document'), 'TaskFileController', 'create', array('task_id' => $task['id'], 'project_id' => $task['project_id'])) ?>
+        </li>
+        <li>
             <?= $this->modal->medium('camera', t('Add a screenshot'), 'TaskPopoverController', 'screenshot', array('task_id' => $task['id'], 'project_id' => $task['project_id'])) ?>
         </li>
         <li>
@@ -32,6 +42,9 @@
         </li>
         <li>
             <?= $this->modal->small('clone', t('Move to another project'), 'TaskDuplicationController', 'move', array('task_id' => $task['id'], 'project_id' => $task['project_id'])) ?>
+        </li>
+        <li>
+            <?= $this->modal->small('paper-plane', t('Send by email'), 'TaskMailController', 'create', array('task_id' => $task['id'], 'project_id' => $task['project_id'])) ?>
         </li>
         <?php if ($this->projectRole->canRemoveTask($task)): ?>
             <li>

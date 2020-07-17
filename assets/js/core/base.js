@@ -27,8 +27,21 @@ KB.trigger = function (eventType, eventData) {
     }
 };
 
-KB.onClick = function (selector, callback) {
-    this.listeners.clicks[selector] = callback;
+KB.removeListener = function (eventType, callback) {
+    if (this.listeners.internals.hasOwnProperty(eventType)) {
+        for (var i = 0; i < this.listeners.internals[eventType].length; i++) {
+            if (this.listeners.internals[eventType][i] === callback) {
+                this.listeners.internals[eventType].splice(i, 1);
+            }
+        }
+    }
+};
+
+KB.onClick = function (selector, callback, noPreventDefault) {
+    this.listeners.clicks[selector] = {
+        callback: callback,
+        noPreventDefault: noPreventDefault === true
+    };
 };
 
 KB.onChange = function (selector, callback) {
@@ -52,8 +65,11 @@ KB.listen = function () {
     function onClick(e) {
         for (var selector in self.listeners.clicks) {
             if (self.listeners.clicks.hasOwnProperty(selector) && e.target.matches(selector)) {
-                e.preventDefault();
-                self.listeners.clicks[selector](e);
+                if (! self.listeners.clicks[selector].noPreventDefault) {
+                    e.preventDefault();
+                }
+
+                self.listeners.clicks[selector].callback(e);
             }
         }
     }

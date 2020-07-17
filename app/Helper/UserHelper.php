@@ -13,7 +13,18 @@ use Kanboard\Core\Base;
 class UserHelper extends Base
 {
     /**
-     * Return true if the logged user as unread notifications
+     * Return subtask list toggle value
+     *
+     * @access public
+     * @return boolean
+     */
+    public function hasSubtaskListActivated()
+    {
+        return $this->userSession->hasSubtaskListActivated();
+    }
+
+    /**
+     * Return true if the logged user has unread notifications
      *
      * @access public
      * @return boolean
@@ -96,6 +107,32 @@ class UserHelper extends Base
     public function getRoleName($role = '')
     {
         return $this->role->getRoleName($role ?: $this->userSession->getRole());
+    }
+
+    /**
+     * Get group names for a given user and return an associative array:
+     *
+     * @access public
+     * @param  integer   $userID   User id
+     * @return array
+     */
+    public function getUsersGroupNames($userID)
+    {
+        $groupsList = array_column($this->groupMemberModel->getGroups($userID), 'name');
+        $limitedList = $groupsList;
+        $total = count($groupsList);
+
+        if ($total > 0 && SHOW_GROUP_MEMBERSHIPS_IN_USERLIST_WITH_LIMIT > 0) {
+            $limitedList = array_slice($groupsList, 0 , SHOW_GROUP_MEMBERSHIPS_IN_USERLIST_WITH_LIMIT);
+        }
+
+        return [
+            'full_list' => $groupsList,
+            'limited_list' => $limitedList,
+            'has_groups' => $total > 0,
+            'total' => $total,
+            'shown' => count($limitedList),
+        ];
     }
 
     /**

@@ -3,7 +3,7 @@
 </div>
 
 <?php if (empty($groups)): ?>
-    <div class="alert"><?= t('No group have been allowed specifically.') ?></div>
+    <div class="alert"><?= t('No group has been allowed.') ?></div>
 <?php else: ?>
     <table class="table-scrolling">
         <tr>
@@ -46,7 +46,7 @@
                 'placeholder="'.t('Enter group name...').'"',
                 'title="'.t('Enter group name...').'"',
                 'data-dst-field="group_id"',
-                'data-dst-extra-field="external_id"',
+                'data-dst-extra-fields="external_id"',
                 'data-search-url="'.$this->url->href('GroupAjaxController', 'autocomplete').'"',
             ),
                 'autocomplete') ?>

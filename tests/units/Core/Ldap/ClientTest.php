@@ -13,6 +13,21 @@ function ldap_set_option()
 {
 }
 
+function ldap_get_option($link_identifier, $option, &$error)
+{
+    $error = 'some extended error';
+}
+
+function ldap_error($link_identifier)
+{
+    return 'some error';
+}
+
+function ldap_errno($link_identifier)
+{
+    return -100;
+}
+
 function ldap_bind($link_identifier, $bind_rdn = null, $bind_password = null)
 {
     return ClientTest::$functions->ldap_bind($link_identifier, $bind_rdn, $bind_password);
@@ -26,7 +41,6 @@ function ldap_start_tls($link_identifier)
 class ClientTest extends \Base
 {
     public static $functions;
-    private $ldap;
 
     public function setUp()
     {
@@ -37,8 +51,11 @@ class ClientTest extends \Base
             ->setMethods(array(
                 'ldap_connect',
                 'ldap_set_option',
+                'ldap_get_option',
                 'ldap_bind',
                 'ldap_start_tls',
+                'ldap_error',
+                'ldap_errno'
             ))
             ->getMock();
     }
@@ -51,7 +68,7 @@ class ClientTest extends \Base
 
     public function testGetLdapServerNotConfigured()
     {
-        $this->setExpectedException('\LogicException');
+        $this->expectException('\LogicException');
         $ldap = new Client;
         $ldap->getLdapServer();
     }
@@ -83,7 +100,7 @@ class ClientTest extends \Base
             )
             ->will($this->returnValue(false));
 
-        $this->setExpectedException('\Kanboard\Core\Ldap\ClientException');
+        $this->expectException('\Kanboard\Core\Ldap\ConnectionException');
 
         $ldap = new Client;
         $ldap->open('my_ldap_server');
@@ -133,7 +150,7 @@ class ClientTest extends \Base
             )
             ->will($this->returnValue(false));
 
-        $this->setExpectedException('\Kanboard\Core\Ldap\ClientException');
+        $this->expectException('\Kanboard\Core\Ldap\ConnectionException');
 
         $ldap = new Client;
         $ldap->open('my_ldap_server', 389, true);
@@ -158,7 +175,7 @@ class ClientTest extends \Base
             ->method('ldap_bind')
             ->will($this->returnValue(false));
 
-        $this->setExpectedException('\Kanboard\Core\Ldap\ClientException');
+        $this->expectException('\Kanboard\Core\Ldap\ClientException');
 
         $ldap = new Client;
         $ldap->useAnonymousAuthentication();
@@ -211,7 +228,7 @@ class ClientTest extends \Base
             )
             ->will($this->returnValue(false));
 
-        $this->setExpectedException('\Kanboard\Core\Ldap\ClientException');
+        $this->expectException('\Kanboard\Core\Ldap\ClientException');
 
         $ldap = new Client;
         $ldap->open('my_ldap_server');

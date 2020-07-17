@@ -14,9 +14,12 @@ class ProjectRoleRestrictionModel extends Base
 {
     const TABLE = 'project_role_has_restrictions';
 
-    const RULE_TASK_CREATION    = 'task_creation';
-    const RULE_TASK_OPEN_CLOSE  = 'task_open_close';
-    const RULE_TASK_MOVE        = 'task_move';
+    const RULE_TASK_CREATION = 'task_creation';
+    const RULE_TASK_SUPPRESSION = 'task_remove';
+    const RULE_TASK_OPEN_CLOSE = 'task_open_close';
+    const RULE_TASK_MOVE = 'task_move';
+    const RULE_TASK_CHANGE_ASSIGNEE = 'task_change_assignee';
+    const RULE_TASK_UPDATE_ASSIGNED = 'task_update_assigned';
 
     /**
      * Get rules
@@ -26,9 +29,12 @@ class ProjectRoleRestrictionModel extends Base
     public function getRules()
     {
         return array(
-            self::RULE_TASK_CREATION    => t('Task creation is not permitted'),
-            self::RULE_TASK_OPEN_CLOSE  => t('Closing or opening a task is not permitted'),
-            self::RULE_TASK_MOVE        => t('Moving a task is not permitted'),
+            self::RULE_TASK_CREATION        => t('Task creation is not permitted'),
+            self::RULE_TASK_SUPPRESSION     => t('Task suppression is not permitted'),
+            self::RULE_TASK_OPEN_CLOSE      => t('Closing or opening a task is not permitted'),
+            self::RULE_TASK_MOVE            => t('Moving a task is not permitted'),
+            self::RULE_TASK_CHANGE_ASSIGNEE => t('Changing assignee is not permitted'),
+            self::RULE_TASK_UPDATE_ASSIGNED => t('Update only assigned tasks is permitted'),
         );
     }
 
@@ -126,5 +132,36 @@ class ProjectRoleRestrictionModel extends Base
     public function remove($restriction_id)
     {
         return $this->db->table(self::TABLE)->eq('restriction_id', $restriction_id)->remove();
+    }
+
+    /**
+     * Copy role restriction models from a custome_role in the src project to the dst custom_role of the dst project 
+     *
+     * @param  integer $project_src_id
+     * @param  integer $project_dst_id
+     * @param  integer $role_src_id
+     * @param  integer $role_dst_id
+     * @return boolean
+     */
+    public function duplicate($project_src_id, $project_dst_id, $role_src_id, $role_dst_id)
+    {
+        $rows = $this->db->table(self::TABLE)
+            ->eq('project_id', $project_src_id)
+            ->eq('role_id', $role_src_id)
+            ->findAll();
+
+        foreach ($rows as $row) {
+            $result = $this->db->table(self::TABLE)->persist(array(
+                'project_id' => $project_dst_id,
+                'role_id' => $role_dst_id,
+                'rule' => $row['rule'],
+            ));
+            
+            if (! $result) {
+                return false;
+            }
+        }
+            
+        return true;
     }
 }

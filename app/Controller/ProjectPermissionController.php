@@ -60,25 +60,6 @@ class ProjectPermissionController extends BaseController
     }
 
     /**
-     * Allow everybody
-     *
-     * @access public
-     */
-    public function allowEverybody()
-    {
-        $project = $this->getProject();
-        $values = $this->request->getValues() + array('is_everybody_allowed' => 0);
-
-        if ($this->projectModel->update($values)) {
-            $this->flash->success(t('Project updated successfully.'));
-        } else {
-            $this->flash->failure(t('Unable to update this project.'));
-        }
-
-        $this->response->redirect($this->helper->url->to('ProjectPermissionController', 'index', array('project_id' => $project['id'])));
-    }
-
-    /**
      * Add user to the project
      *
      * @access public
@@ -87,6 +68,10 @@ class ProjectPermissionController extends BaseController
     {
         $project = $this->getProject();
         $values = $this->request->getValues();
+
+        if (empty($values['user_id']) && ! empty($values['external_id']) && ! empty($values['external_id_column'])) {
+            $values['user_id'] = $this->userModel->getOrCreateExternalUserId($values['username'], $values['name'], $values['external_id_column'], $values['external_id']);
+        }
 
         if (empty($values['user_id'])) {
             $this->flash->failure(t('User not found.'));
@@ -129,11 +114,27 @@ class ProjectPermissionController extends BaseController
         $project = $this->getProject();
         $values = $this->request->getJson();
 
-        if (! empty($project) && ! empty($values) && $this->projectUserRoleModel->changeUserRole($project['id'], $values['id'], $values['role'])) {
-            $this->response->json(array('status' => 'ok'));
-        } else {
+        if (empty($project) ||
+            empty($values)
+        ) {
             $this->response->json(array('status' => 'error'), 500);
+            return;
         }
+
+        $userRole = $this->projectUserRoleModel->getUserRole($project['id'], $values['id']);
+        $usersGroupedByRole = $this->projectUserRoleModel->getAllUsersGroupedByRole($project['id']);
+
+        if ($userRole === 'project-manager' &&
+            $values['role'] !== 'project-manager' &&
+            count($usersGroupedByRole['project-manager']) <= 1
+        ) {
+            $this->response->json(array('status' => 'error'), 500);
+            return;
+        }
+
+        $this->projectUserRoleModel->changeUserRole($project['id'], $values['id'], $values['role']);
+
+        $this->response->json(array('status' => 'ok'));
     }
 
     /**
@@ -150,10 +151,14 @@ class ProjectPermissionController extends BaseController
             $values['group_id'] = $this->groupModel->getOrCreateExternalGroupId($values['name'], $values['external_id']);
         }
 
-        if ($this->projectGroupRoleModel->addGroup($project['id'], $values['group_id'], $values['role'])) {
-            $this->flash->success(t('Project updated successfully.'));
+        if (empty($values['group_id'])) {
+            $this->flash->failure(t('Unable to find this group.'));
         } else {
-            $this->flash->failure(t('Unable to update this project.'));
+            if ($this->projectGroupRoleModel->addGroup($project['id'], $values['group_id'], $values['role'])) {
+                $this->flash->success(t('Project updated successfully.'));
+            } else {
+                $this->flash->failure(t('Unable to update this project.'));
+            }
         }
 
         $this->response->redirect($this->helper->url->to('ProjectPermissionController', 'index', array('project_id' => $project['id'])));

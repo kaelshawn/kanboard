@@ -4,7 +4,7 @@ KB.component('confirm-buttons', function (containerElement, options) {
     function onSubmit() {
         isLoading = true;
         KB.find('#modal-confirm-button').replace(buildButton());
-        window.location.href = options.url;
+        KB.http.get(options.url);
     }
 
     function onCancel() {
@@ -42,6 +42,9 @@ KB.component('confirm-buttons', function (containerElement, options) {
 
     this.render = function () {
         KB.on('modal.stop', onStop);
+        KB.on('modal.close', function () {
+            KB.removeListener('modal.stop', onStop);
+        });
 
         var element = KB.dom('div')
             .attr('class', 'form-actions')
